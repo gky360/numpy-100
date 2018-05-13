@@ -1,7 +1,4 @@
-# -*- coding: utf-8 -*-
-
-"""
-# 100 numpy exercises
+"""100 numpy exercises.
 
 This is a collection of exercises that have been collected in the numpy mailing
 list, on stack overflow and in the numpy documentation. I've also created some
@@ -13,50 +10,79 @@ If you find an error or think you've a better way to solve some of them, feel
 free to open an issue at <https://github.com/rougier/numpy-100>
 """
 
+# -*- coding: utf-8 -*-
+
 # %% 1. Import the numpy package under the name `np` (★☆☆)
 
+import numpy as np
 
 # %% 2. Print the numpy version and the configuration (★☆☆)
 
+np.__version__
+np.show_config()
 
 # %% 3. Create a null vector of size 10 (★☆☆)
 
+np.zeros(10)
 
 # %% 4.  How to find the memory size of any array (★☆☆)
+
+Z = np.zeros((10, 10))
+"{:d} bytes".format(Z.size * Z.itemsize)
 
 
 # %% 5.  How to get the documentation of the numpy add function from the command line? (★☆☆)
 
+"""
+python -c "import numpy; numpy.info(numpy.add)"
+"""
 
 # %% 6.  Create a null vector of size 10 but the fifth value which is 1 (★☆☆)
 
+Z = np.zeros(10)
+Z[4] = 1
+Z
 
 # %% 7.  Create a vector with values ranging from 10 to 49 (★☆☆)
 
+np.arange(10, 50)
 
 # %% 8.  Reverse a vector (first element becomes last) (★☆☆)
 
+Z = np.arange(10, 50)
+Z[::-1]
 
 # %% 9.  Create a 3x3 matrix with values ranging from 0 to 8 (★☆☆)
 
+np.arange(9).reshape((3, 3))
 
 # %% 10. Find indices of non-zero elements from \[1,2,0,0,4,0\] (★☆☆)
 
+np.nonzero([1, 2, 0, 0, 4, 0])
 
 # %% 11. Create a 3x3 identity matrix (★☆☆)
 
+np.eye(3)
 
 # %% 12. Create a 3x3x3 array with random values (★☆☆)
 
+np.random.random((3, 3, 3))
 
 # %% 13. Create a 10x10 array with random values and find the minimum and maximum values (★☆☆)
 
+Z = np.random.random((10, 10))
+Z.min(), Z.max()
 
 # %% 14. Create a random vector of size 30 and find the mean value (★☆☆)
 
+Z = np.random.random(30)
+Z.mean()
 
 # %% 15. Create a 2d array with 1 on the border and 0 inside (★☆☆)
 
+Z = np.ones((10, 10))
+Z[1:-1, 1:-1] = 0
+Z
 
 # %% 16. How to add a border (filled with 0's) around an existing array? (★☆☆)
 
