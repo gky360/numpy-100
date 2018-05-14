@@ -14,6 +14,8 @@ free to open an issue at <https://github.com/rougier/numpy-100>
 
 # %% 1. Import the numpy package under the name `np` (★☆☆)
 
+import math
+
 import numpy as np
 
 # %% 2. Print the numpy version and the configuration (★☆☆)
@@ -86,6 +88,11 @@ Z
 
 # %% 16. How to add a border (filled with 0's) around an existing array? (★☆☆)
 
+# !!!
+Z = np.ones((5, 5))
+Z = np.pad(Z, pad_width=1, mode='constant', constant_values=0)
+Z
+
 
 # %% 17. What is the result of the following expression? (★☆☆)
 
@@ -99,32 +106,65 @@ np.nan - np.nan
 ```
 """
 
+# !!!
+assert(math.isnan(0 * np.nan))
+assert((np.nan == np.nan) is False)
+assert((np.inf > np.nan)is False)
+assert(math.isnan(np.nan - np.nan))
+assert((0.3 == 3 * 0.1) is False)
+
 # %% 18. Create a 5x5 matrix with values 1,2,3,4 just below the diagonal (★☆☆)
 
+# !!!
+Z = np.diag(1 + np.arange(4), k=-1)
+Z
 
 # %% 19. Create a 8x8 matrix and fill it with a checkerboard pattern (★☆☆)
 
+Z = np.zeros((8, 8), dtype=int)
+Z[::2, ::2] = 1
+Z[1::2, 1::2] = 1
+Z
 
 # %% 20. Consider a (6,7,8) shape array, what is the index (x,y,z) of the 100th element?
 
+# !!!
+np.unravel_index(100, (6, 7, 8))
 
 # %% 21. Create a checkerboard 8x8 matrix using the tile function (★☆☆)
 
+# !!!
+Z = np.tile(np.eye(2), (4, 4))
+Z
 
 # %% 22. Normalize a 5x5 random matrix (★☆☆)
 
+Z = np.random.random((5, 5))
+Z_max, Z_min = Z.max(), Z.min()
+Z = (Z - Z_min) / (Z_max - Z_min)
+Z
 
 # %% 23. Create a custom dtype that describes a color as four unsigned bytes (RGBA) (★☆☆)
 
+# !!!
+color = np.dtype([('r', np.ubyte, 1),
+                  ('g', np.ubyte, 1),
+                  ('b', np.ubyte, 1),
+                  ('a', np.ubyte, 1)])
+color
 
 # %% 24. Multiply a 5x3 matrix by a 3x2 matrix (real matrix product) (★☆☆)
 
+Z = np.ones((5, 3)) @ np.ones((3, 2))
+Z
 
 # %% 25. Given a 1D array, negate all elements which are between 3 and 8, in place. (★☆☆)
 
+Z = np.arange(11)
+Z[(3 < Z) & (Z <= 8)] *= -1
+Z
 
 # %% 26. What is the output of the following script? (★☆☆)
-
 
 """
 ```python
@@ -137,8 +177,14 @@ print(sum(range(5), -1))
 ```
 """
 
-# %% 27. Consider an integer vector Z, which of these expressions are legal? (★☆☆)
+"""
+print(sum(range(5), -1))  # => 9
+from numpy import *  # => overwrites `sum` func
 
+print(sum(range(5), -1))  # => 10
+"""
+
+# %% 27. Consider an integer vector Z, which of these expressions are legal? (★☆☆)
 
 """
 ```python
@@ -151,8 +197,12 @@ Z < Z > Z
 ```
 """
 
-# %% 28. What are the result of the following expressions?
+"""
+Z**Z  # => illegal
+Z < Z > Z  # => illegal
+"""
 
+# %% 28. What are the result of the following expressions?
 
 """
 ```python
@@ -162,11 +212,22 @@ np.array([np.nan]).astype(int).astype(float)
 ```
 """
 
+assert(math.isnan(np.array(0) / np.array(0)))
+assert((np.array(0) // np.array(0)) == 0)
+np.array([np.nan]).astype(int).astype(float)  # => array([-9.22337204e+18])
+
 # %% 29. How to round away from zero a float array ? (★☆☆)
 
+a = np.random.uniform(-10, +10, 10)
+Z = np.copysign(np.ceil(np.abs(a)), a)
+Z
 
 # %% 30. How to find common values between two arrays? (★☆☆)
 
+a1 = np.random.randint(0, 10, 10)
+a2 = np.random.randint(0, 10, 10)
+Z = np.intersect1d(a1, a2)
+Z
 
 # %% 31. How to ignore all numpy warnings (not recommended)? (★☆☆)
 
