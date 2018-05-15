@@ -231,9 +231,14 @@ Z
 
 # %% 31. How to ignore all numpy warnings (not recommended)? (★☆☆)
 
+# Suicide mode on# Suici
+defaults = np.seterr(all="ignore")
+Z = np.ones(1) / 0  # No warnings
+# Back to sanity
+_ = np.seterr(**defaults)
+Z = np.ones(1) / 0  # Shows warning
 
 # %% 32. Is the following expressions true? (★☆☆)
-
 
 """
 ```python
@@ -241,29 +246,68 @@ np.sqrt(-1) == np.emath.sqrt(-1)
 ```
 """
 
+assert(math.isnan(np.sqrt(-1)))
+assert(np.emath.sqrt(-1) == 1j)
+
 # %% 33. How to get the dates of yesterday, today and tomorrow? (★☆☆)
 
+yesterday = np.datetime64('today', 'D') - np.timedelta64(1, 'D')
+today = np.datetime64('today', 'D')
+tomorrow = np.datetime64('today', 'D') + np.timedelta64(1, 'D')
 
 # %% 34. How to get all the dates corresponding to the month of July 2016? (★★☆)
 
+Z = np.arange('2016-07', '2016-08', dtype='datetime64[D]')
+Z
 
 # %% 35. How to compute ((A+B)\*(-A/2)) in place (without copy)? (★★☆)
 
+# ??? is this correct
+
+A = np.ones(3) * 1
+B = np.ones(3) * 2
+np.add(A, B, out=B)
+np.divide(A, 2, out=A)
+np.negative(A, out=A)
+np.multiply(A, B, out=A)
+A
 
 # %% 36. Extract the integer part of a random array using 5 different methods (★★☆)
 
+Z = np.random.uniform(0, 10, 10)
+print(Z - Z % 1)
+print(np.floor(Z))
+print(np.ceil(Z) - 1)
+print(Z.astype(int))
+print(np.trunc(Z))
 
 # %% 37. Create a 5x5 matrix with row values ranging from 0 to 4 (★★☆)
 
+Z = np.zeros((5, 5))
+Z += np.arange(5)  # broadcasting
+Z
 
 # %% 38. Consider a generator function that generates 10 integers and use it to build an array (★☆☆)
 
 
+def generate():
+    for x in range(10):
+        yield x
+
+
+Z = np.fromiter(generate(), dtype=float, count=-1)
+Z
+
 # %% 39. Create a vector of size 10 with values ranging from 0 to 1, both excluded (★★☆)
 
+Z = np.linspace(0, 1, 11, endpoint=False)[1:]
+Z
 
 # %% 40. Create a random vector of size 10 and sort it (★★☆)
 
+Z = np.random.random(10)
+Z.sort()
+Z
 
 # %% 41. How to sum a small array faster than np.sum? (★★☆)
 
