@@ -15,8 +15,10 @@ free to open an issue at <https://github.com/rougier/numpy-100>
 # %% 1. Import the numpy package under the name `np` (★☆☆)
 
 import math
+from io import StringIO
 
 import numpy as np
+import scipy.spatial
 
 # %% 2. Print the numpy version and the configuration (★☆☆)
 
@@ -311,45 +313,108 @@ Z
 
 # %% 41. How to sum a small array faster than np.sum? (★★☆)
 
+Z = np.arange(10)
+np.add.reduce(Z)
 
 # %% 42. Consider two random array A and B, check if they are equal (★★☆)
 
+A = np.random.randint(0, 2, 5)
+B = A
+assert(np.allclose(A, B))
+assert(np.array_equal(A, B))
 
 # %% 43. Make an array immutable (read-only) (★★☆)
 
+Z = np.zeros(10)
+Z.flags.writeable = False
+try:
+    Z[0] = 1
+except ValueError as e:
+    print(e)
 
 # %% 44. Consider a random 10x2 matrix representing cartesian coordinates, convert them to polar coordinates (★★☆)
 
+Z = np.random.random((10, 2))
+X, Y = Z[:, 0], Z[:, 1]
+R = np.sqrt(X**2 + Y**2)
+T = np.arctan2(Y, X)
+np.array(list(zip(R, T)), float)
 
 # %% 45. Create random vector of size 10 and replace the maximum value by 0 (★★☆)
 
+Z = np.random.random(10)
+print(Z)
+Z[Z.argmax()] = 0
+print(Z)
 
 # %% 46. Create a structured array with `x` and `y` coordinates covering the \[0,1\]x\[0,1\] area (★★☆)
 
+Z = np.zeros((5, 5), [('x', float), ('y', float)])
+Z['x'], Z['y'] = np.meshgrid(np.linspace(0, 1, 5),
+                             np.linspace(0, 1, 5))
+print(Z)
 
 # %% 47. Given two arrays, X and Y, construct the Cauchy matrix C (Cij =1/(xi - yj))
 
+X = np.arange(8)
+Y = X + 0.5
+# outer ... Apply the ufunc op to all pairs (a, b) with a in A and b in B.
+C = 1.0 / np.subtract.outer(X, Y)
+C
 
 # %% 48. Print the minimum and maximum representable value for each numpy scalar type (★★☆)
 
+for dtype in [np.int8, np.int32, np.int64]:
+    print(np.iinfo(dtype))
+for dtype in [np.float32, np.float64]:
+    print(np.finfo(dtype))
 
 # %% 49. How to print all the values of an array? (★★☆)
 
+po = np.get_printoptions()
+po
+np.set_printoptions(threshold=np.nan)
+Z = np.zeros((32, 32))
+print(Z)
+np.set_printoptions(**po)
+print(Z)
 
 # %% 50. How to find the closest value (to a given scalar) in a vector? (★★☆)
 
+Z = np.arange(100)
+v = np.random.uniform(0, 100)
+v
+idx = (np.abs(Z - v)).argmin()
+Z[idx]
 
 # %% 51. Create a structured array representing a position (x,y) and a color (r,g,b) (★★☆)
 
+Z = np.zeros(10, [('position', [('x', float, 1),
+                                ('y', float, 1)]),
+                  ('color', [('r', int, 1),
+                             ('g', int, 1),
+                             ('b', int, 1)])])
+Z
 
 # %% 52. Consider a random vector with shape (100,2) representing coordinates, find point by point distances (★★☆)
 
+Z = np.random.random((10, 2))
+X, Y = np.atleast_2d(Z[:, 0], Z[:, 1])
+D = np.sqrt((X - X.T)**2 + (Y - Y.T)**2)
+D
+
+# or
+
+D = scipy.spatial.distance.cdist(Z, Z)
+D
 
 # %% 53. How to convert a float (32 bits) array into an integer (32 bits) in place?
 
+Z = np.arange(10, dtype=np.float32)
+Z = Z.astype(np.int32, copy=False)
+Z
 
 # %% 54. How to read the following file? (★★☆)
-
 
 """
 ```
@@ -359,8 +424,21 @@ Z
 ```
 """
 
+# Fake file
+s = StringIO("""1, 2, 3, 4, 5\n
+                6,  ,  , 7, 8\n
+                 ,  , 9,10,11\n""")
+
+np.genfromtxt(s, delimiter=',', dtype=np.int, filling_values=0)
+
+
 # %% 55. What is the equivalent of enumerate for numpy arrays? (★★☆)
 
+Z = np.arange(9).reshape(3, 3)
+for idx, v in np.ndenumerate(Z):
+    print(idx, v)
+for idx in np.ndindex(Z.shape):
+    print(idx, Z[idx])
 
 # %% 56. Generate a generic 2D Gaussian-like array (★★☆)
 
