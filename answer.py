@@ -18,6 +18,7 @@ import math
 from io import StringIO
 
 import numpy as np
+import pandas as pd
 import scipy.spatial
 
 # %% 2. Print the numpy version and the configuration (★☆☆)
@@ -440,49 +441,157 @@ for idx, v in np.ndenumerate(Z):
 for idx in np.ndindex(Z.shape):
     print(idx, Z[idx])
 
+
 # %% 56. Generate a generic 2D Gaussian-like array (★★☆)
+
+X, Y = np.meshgrid(np.linspace(-1, 1, 10), np.linspace(-1, 1, 10))
+D = np.sqrt(X * X + Y * Y)
+sigma, mu = 1.0, 0.0
+G = np.exp(-((D - mu)**2 / (2.0 * sigma**2)))
+G
 
 
 # %% 57. How to randomly place p elements in a 2D array? (★★☆)
 
+n = 5
+p = 3
+Z = np.zeros((n, n))
+np.put(Z, np.random.choice(range(n * n), p, replace=False), 1)
+Z
+
 
 # %% 58. Subtract the mean of each row of a matrix (★★☆)
+
+Z = np.random.rand(5, 10)
+Z = Z - np.mean(Z, axis=1, keepdims=True)
+Z
 
 
 # %% 59. How to sort an array by the nth column? (★★☆)
 
+n = 3
+Z = np.random.randint(0, 10, (5, 5))
+Z
+Z[Z[:, n].argsort()]
+
 
 # %% 60. How to tell if a given 2D array has null columns? (★★☆)
+
+Z = np.random.randint(0, 3, (3, 10))
+Z
+(~Z.any(axis=0)).any()
 
 
 # %% 61. Find the nearest value from a given value in an array (★★☆)
 
+Z = np.random.rand(10)
+Z
+x = 0.3
+Z[np.abs(Z - x).argmin()]
+
 
 # %% 62. Considering two arrays with shape (1,3) and (3,1), how to compute their sum using an iterator? (★★☆)
+
+A = np.arange(3).reshape(3, 1)
+B = np.arange(3).reshape(1, 3)
+it = np.nditer([A, B, None])
+for x, y, z in it:
+    print(x, y)
+    z[...] = x + y
+# (0, 0), (0, 1), (0, 2), (1, 0), ... , (2, 2)
+it.operands[2]
 
 
 # %% 63. Create an array class that has a name attribute (★★☆)
 
+class NamedArray(np.ndarray):
+    def __new__(cls, array, name="no name"):
+        obj = np.asarray(array).view(cls)
+        obj.name = name
+        return obj
+
+    def __array_finalize__(self, obj):
+        if obj is None:
+            return
+        self.info = getattr(obj, "name", "no name")
+
+
+Z = NamedArray(np.arange(10), "range_10")
+Z.name
+
 
 # %% 64. Consider a given vector, how to add 1 to each element indexed by a second vector (be careful with repeated indices)? (★★★)
 
+Z = np.ones(10)
+I = np.random.randint(0, len(Z), 20)
+Z += np.bincount(I, minlength=len(Z))
+Z
+# or
+Z = np.ones(10)
+I = np.random.randint(0, len(Z), 20)
+np.add.at(Z, I, 1)
+Z
 
 # %% 65. How to accumulate elements of a vector (X) to an array (F) based on an index list (I)? (★★★)
+
+X = [1, 2, 3, 4, 5, 6]
+I = [1, 3, 9, 3, 4, 1]
+F = np.bincount(I, X)
+F
 
 
 # %% 66. Considering a (w,h,3) image of (dtype=ubyte), compute the number of unique colors (★★★)
 
+w, h = 16, 16
+I = np.random.randint(0, 2, (h, w, 3)).astype(np.ubyte)
+F = I[..., 0] * 256 * 256 + I[..., 1] * 256 + I[..., 2]
+Z = np.unique(F)
+n = len(Z)
+n
+
 
 # %% 67. Considering a four dimensions array, how to get sum over the last two axis at once? (★★★)
+
+A = np.random.randint(0, 10, (3, 4, 3, 4))
+np.sum
+s = A.sum(axis=(-2, -1))
+s
+# or
+s = A.reshape(A.shape[:-2] + (-1,)).sum(axis=-1)
+s
 
 
 # %% 68. Considering a one-dimensional vector D, how to compute means of subsets of D using a vector S of same size describing subset  indices? (★★★)
 
+D = np.random.uniform(0, 1, 100)
+S = np.random.randint(0, 10, 100)
+D_sums = np.bincount(S, weights=D)
+D_counts = np.bincount(S)
+D_means = D_sums / D_counts
+D_means
+# or
+pd.Series(D).groupby(S).mean()
+
 
 # %% 69. How to get the diagonal of a dot product? (★★★)
 
+A = np.random.uniform(0, 1, (5, 5))
+B = np.random.uniform(0, 1, (5, 5))
+
+# slow
+np.diag(A @ B)
+
+# fast
+np.einsum('ij,ji->i', A, B)
+
 
 # %% 70. Consider the vector \[1, 2, 3, 4, 5\], how to build a new vector with 3 consecutive zeros interleaved between each value? (★★★)
+
+Z = np.array([1, 2, 3, 4, 5])
+nz = 3
+Z0 = np.zeros(len(Z) + (len(Z) - 1) * (nz))
+Z0[::(nz + 1)] = Z
+Z0
 
 
 # %% 71. Consider an array of dimension (5,5,3), how to mulitply it by an array with dimensions (5,5)? (★★★)
