@@ -20,6 +20,7 @@ from io import StringIO
 import numpy as np
 import pandas as pd
 import scipy.spatial
+from numpy.lib import stride_tricks
 
 # %% 2. Print the numpy version and the configuration (★☆☆)
 
@@ -596,32 +597,125 @@ Z0
 
 # %% 71. Consider an array of dimension (5,5,3), how to mulitply it by an array with dimensions (5,5)? (★★★)
 
+A = np.ones((5, 5, 3))
+B = 2 * np.ones((5, 5))
+Z = A * B[:, :, None]
+Z
+
 
 # %% 72. How to swap two rows of an array? (★★★)
+
+A = np.arange(25).reshape(5, 5)
+A[[0, 1]] = A[[1, 0]]
+A
 
 
 # %% 73. Consider a set of 10 triplets describing 10 triangles (with shared vertices), find the set of unique line segments composing all the  triangles (★★★)
 
+faces = np.random.randint(0, 100, (10, 3))
+F = np.roll(faces.repeat(2, axis=1), -1, axis=1)
+F = F.reshape(len(F) * 3, 2)
+F = np.sort(F, axis=1)
+G = F.view(dtype=[('p0', F.dtype), ('p1', F.dtype)])
+G = np.unique(G)
+G
+
 
 # %% 74. Given an array C that is a bincount, how to produce an array A such that np.bincount(A) == C? (★★★)
+
+C = np.bincount([1, 1, 2, 3, 4, 4, 6])
+Z = np.repeat(np.arange(len(C)), C)
+Z
 
 
 # %% 75. How to compute averages using a sliding window over an array? (★★★)
 
+def moving_average(a, n=3):
+    ret = np.cumsum(a, dtype=float)  # 累積和を取る
+    ret[n:] = ret[n:] - ret[:-n]
+    return ret[n - 1:] / n
+
+Z = moving_average(np.arange(20), 3)
+Z
+
 
 # %% 76. Consider a one-dimensional array Z, build a two-dimensional array whose first row is (Z\[0\],Z\[1\],Z\[2\]) and each subsequent row is  shifted by 1 (last row should be (Z\[-3\],Z\[-2\],Z\[-1\]) (★★★)
+
+def rolling(a, window):
+    shape = (a.size - window + 1, window)
+    strides = (a.itemsize, a.itemsize)
+    return stride_tricks.as_strided(a, shape=shape, strides=strides)
+Z = rolling(np.arange(10), 3)
+Z
 
 
 # %% 77. How to negate a boolean, or to change the sign of a float inplace? (★★★)
 
+Z = np.random.randint(0, 2, 100)
+np.logical_not(Z, out=Z)
+
+# or
+
+Z = np.random.uniform(-1.0, 1.0, 100)
+np.negative(Z, out=Z)
+
 
 # %% 78. Consider 2 sets of points P0,P1 describing lines (2d) and a point p, how to compute distance from p to each line i  (P0\[i\],P1\[i\])? (★★★)
+
+# n[1,...,1]            # equivalent to n[1,:,:,1]
+
+def distance(P0, P1, p):
+    T = P1 - P0
+    L = (T**2).sum(axis=1)
+    U = -((P0[:, 0] - p[..., 0]) * T[:, 0] +
+          (P0[:, 1] - p[..., 1]) * T[:, 1]) / L
+    U = U.reshape(len(U), 1)
+    D = P0 + U * T - p
+    return np.sqrt((D**2).sum(axis=1))
+
+P0 = np.random.uniform(-10, 10, (10, 2))
+P1 = np.random.uniform(-10, 10, (10, 2))
+p = np.random.uniform(-10, 10, (1, 2))
+Z = distance(P0, P1, p)
+Z
 
 
 # %% 79. Consider 2 sets of points P0,P1 describing lines (2d) and a set of points P, how to compute distance from each point j (P\[j\]) to each line i (P0\[i\],P1\[i\])? (★★★)
 
+P0 = np.random.uniform(-10, 10, (10, 2))
+P1 = np.random.uniform(-10, 10, (10, 2))
+p = np.random.uniform(-10, 10, (10, 2))
+Z = np.array([distance(P0, P1, p_i) for p_i in p])
+Z
+
 
 # %% 80. Consider an arbitrary array, write a function that extract a subpart with a fixed shape and centered on a given element (pad with a `fill` value when necessary) (★★★)
+
+Z = np.random.randint(0, 10, (10, 10))
+shape = (5, 5)
+fill = 0
+position = (1, 1)
+
+R = np.ones(shape, dtype=Z.dtype) * fill
+P = np.array(list(position)).astype(int)
+Rs = np.array(list(R.shape)).astype(int)
+Zs = np.array(list(Z.shape)).astype(int)
+
+R_start = np.zeros((len(shape),)).astype(int)
+R_stop = np.array(list(shape)).astype(int)
+Z_start = (P - Rs // 2)
+Z_stop = (P + Rs // 2) + Rs % 2
+
+R_start = (R_start - np.minimum(Z_start, 0)).tolist()
+Z_start = (np.maximum(Z_start, 0)).tolist()
+R_stop = np.maximum(R_start, (R_stop - np.maximum(Z_stop - Zs, 0))).tolist()
+Z_stop = (np.minimum(Z_stop, Zs)).tolist()
+
+r = [slice(start, stop) for start, stop in zip(R_start, R_stop)]
+z = [slice(start, stop) for start, stop in zip(Z_start, Z_stop)]
+R[r] = Z[z]
+print(Z)
+print(R)
 
 
 # %% 81. Consider an array Z = \[1,2,3,4,5,6,7,8,9,10,11,12,13,14\], how to generate an array R = \[\[1,2,3,4\], \[2,3,4,5\], \[3,4,5,6\], ..., \[11,12,13,14\]\]? (★★★)
