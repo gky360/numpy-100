@@ -15,8 +15,11 @@ free to open an issue at <https://github.com/rougier/numpy-100>
 # %% 1. Import the numpy package under the name `np` (★☆☆)
 
 import math
+import time
 from io import StringIO
 
+import matplotlib.cm as cm
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import scipy.spatial
@@ -720,32 +723,124 @@ print(R)
 
 # %% 81. Consider an array Z = \[1,2,3,4,5,6,7,8,9,10,11,12,13,14\], how to generate an array R = \[\[1,2,3,4\], \[2,3,4,5\], \[3,4,5,6\], ..., \[11,12,13,14\]\]? (★★★)
 
+Z = np.arange(1, 15, dtype=np.uint32)
+# strides=(w, h)
+# w ... 隣の列に移るのにスキップするべきバイト数
+# h ... 隣の行に移るのにスキップするべきバイト数
+R = stride_tricks.as_strided(Z, shape=(11, 4), strides=(4, 4))
+R
+
 
 # %% 82. Compute a matrix rank (★★★)
+
+Z = np.random.uniform(0, 1, (10, 10))
+U, S, V = np.linalg.svd(Z)
+rank = np.sum(S > 1e-10)
+rank
 
 
 # %% 83. How to find the most frequent value in an array?
 
+Z = np.random.randint(0, 10, 50)
+np.bincount(Z).argmax()
+
 
 # %% 84. Extract all the contiguous 3x3 blocks from a random 10x10 matrix (★★★)
+
+Z = np.random.randint(0, 5, (10, 10))
+Z.strides + Z.strides
+n = 3
+w = Z.shape[0] - n + 1
+h = Z.shape[1] - n + 1
+C = stride_tricks.as_strided(
+    Z, shape=(w, h, n, n), strides=Z.strides + Z.strides)
+C
 
 
 # %% 85. Create a 2D array subclass such that Z\[i,j\] == Z\[j,i\] (★★★)
 
+class Symetric(np.ndarray):
+    def __setitem__(self, index, value):
+        i, j = index
+        super(Symetric, self).__setitem__((i, j), value)
+        super(Symetric, self).__setitem__((j, i), value)
+
+
+def symetric(Z):
+    return np.asarray(Z + Z.T - np.diag(Z.diagonal())).view(Symetric)
+
+S = symetric(np.random.randint(0, 10, (5, 5)))
+S[2, 3] = 42
+print(S)
+
 
 # %% 86. Consider a set of p matrices wich shape (n,n) and a set of p vectors with shape (n,1). How to compute the sum of of the p matrix products at once? (result has shape (n,1)) (★★★)
+
+p, n = 10, 20
+M = np.ones((p, n, n))
+V = np.ones((p, n, 1))
+S = np.tensordot(M, V, axes=[[0, 2], [0, 1]])
+S
 
 
 # %% 87. Consider a 16x16 array, how to get the block-sum (block size is 4x4)? (★★★)
 
+Z = np.ones((16, 16))
+k = 4
+S = np.add.reduceat(np.add.reduceat(Z, np.arange(0, Z.shape[0], k), axis=0),
+                    np.arange(0, Z.shape[1], k), axis=1)
+S
+
 
 # %% 88. How to implement the Game of Life using numpy arrays? (★★★)
+
+def iterate(Z):
+    # Count neighbours
+    N = (Z[0:-2, 0:-2] + Z[0:-2, 1:-1] + Z[0:-2, 2:] +
+         Z[1:-1, 0:-2] + Z[1:-1, 2:] +
+         Z[2:, 0:-2] + Z[2:, 1:-1] + Z[2:, 2:])
+
+    # Apply rules
+    birth = (N == 3) & (Z[1:-1, 1:-1] == 0)
+    survive = ((N == 2) | (N == 3)) & (Z[1:-1, 1:-1] == 1)
+    Z[...] = 0
+    Z[1:-1, 1:-1][birth | survive] = 1
+    return Z
+
+Z = np.random.randint(0, 2, (50, 50), dtype=np.uint8)
+for i in range(10):
+    Z = iterate(Z)
+    plt.imshow(~Z, cmap=cm.gray)
+    display.clear_output(wait=True)
+    display.display(pl.gcf())
+    time.sleep(0.5)
 
 
 # %% 89. How to get the n largest values of an array (★★★)
 
+Z = np.arange(10000)
+np.random.shuffle(Z)
+n = 5
+Z[np.argsort(Z)[-n:]]
+
 
 # %% 90. Given an arbitrary number of vectors, build the cartesian product (every combinations of every item) (★★★)
+
+def cartesian(arrays):
+    arrays = [1, 2, 3], [4, 5], [6, 7]
+    arrays = [np.asarray(a) for a in arrays]
+    shape = (len(x) for x in arrays)
+
+    ix = np.indices(shape, dtype=int)
+    ix = ix.reshape(len(arrays), -1).T
+
+    for n, arr in enumerate(arrays):
+        ix[:, n] = arrays[n][ix[:, n]]
+
+    return ix
+
+Z = cartesian(([1, 2, 3], [4, 5], [6, 7]))
+Z
 
 
 # %% 91. How to create a record array from a regular array? (★★★)
