@@ -845,29 +845,104 @@ Z
 
 # %% 91. How to create a record array from a regular array? (★★★)
 
+Z = np.array([("Hello", 2.5, 3),
+              ("World", 3.6, 2)])
+R = np.core.records.fromarrays(Z.T,
+                               names='col1, col2, col3',
+                               formats='S8, f8, i8')
+R
+
 
 # %% 92. Consider a large vector Z, compute Z to the power of 3 using 3 different methods (★★★)
+
+x = np.random.rand(int(5e7))
+
+%timeit np.power(x, 3)  # 1.
+%timeit x * x * x  # 2.
+%timeit np.einsum('i,i,i->i', x, x, x)  # 3.
+# 1. 1.98 s ± 290 ms per loop (mean ± std. dev. of 7 runs, 1 loop each)
+# 2. 506 ms ± 47.8 ms per loop (mean ± std. dev. of 7 runs, 1 loop each)
+# 3. 535 ms ± 119 ms per loop (mean ± std. dev. of 7 runs, 1 loop each)
 
 
 # %% 93. Consider two arrays A and B of shape (8,3) and (2,2). How to find rows of A that contain elements of each row of B regardless of the order of the elements in B? (★★★)
 
+A = np.random.randint(0, 5, (8, 3))
+B = np.random.randint(0, 5, (2, 2))
+C = (A[..., np.newaxis, np.newaxis] == B)
+rows = np.where(C.any((3, 1)).all(1))[0]
+rows
+
 
 # %% 94. Considering a 10x3 matrix, extract rows with unequal values (e.g. \[2,2,3\]) (★★★)
+
+Z = np.random.randint(0, 5, (10, 3))
+# solution for arrays of all dtypes (including string arrays and record arrays)
+E = np.all(Z[:, 1:] == Z[:, :-1], axis=1)
+U = Z[~E]
+U
+# soluiton for numerical arrays only, will work for any number of columns in Z
+U = Z[Z.max(axis=1) != Z.min(axis=1), :]
+U
 
 
 # %% 95. Convert a vector of ints into a matrix binary representation (★★★)
 
+I = np.array([0, 1, 2, 3, 15, 16, 32, 64, 128], dtype=np.uint8)
+np.unpackbits(I[:, np.newaxis], axis=1)
+
 
 # %% 96. Given a two dimensional array, how to extract unique rows? (★★★)
+
+Z = np.random.randint(0, 2, (6, 3))
+T = np.ascontiguousarray(Z).view(
+    np.dtype((np.void, Z.dtype.itemsize * Z.shape[1])))
+_, idx = np.unique(T, return_index=True)
+uZ = Z[idx]
+uZ
 
 
 # %% 97. Considering 2 vectors A & B, write the einsum equivalent of inner, outer, sum, and mul function (★★★)
 
+A = np.random.uniform(0, 1, 10)
+B = np.random.uniform(0, 1, 10)
+
+np.einsum('i->', A)       # np.sum(A)
+np.einsum('i,i->i', A, B)  # A * B
+np.einsum('i,i', A, B)    # np.inner(A, B)
+np.einsum('i,j->ij', A, B)    # np.outer(A, B)
 
 # %% 98. Considering a path described by two vectors (X,Y), how to sample it using equidistant samples (★★★)?
+
+phi = np.arange(0, 10 * np.pi, 0.1)
+a = 1
+x = a * phi * np.cos(phi)
+y = a * phi * np.sin(phi)
+
+dr = (np.diff(x)**2 + np.diff(y)**2)**.5  # segment lengths
+r = np.zeros_like(x)
+r[1:] = np.cumsum(dr)                # integrate path
+r_int = np.linspace(0, r.max(), 200)  # regular spaced path
+x_int = np.interp(r_int, r, x)       # integrate path
+y_int = np.interp(r_int, r, y)
 
 
 # %% 99. Given an integer n and a 2D array X, select from X the rows which can be interpreted as draws from a multinomial distribution with n degrees, i.e., the rows which only contain integers and which sum to n. (★★★)
 
+X = np.asarray([[1.0, 0.0, 3.0, 8.0],
+                [2.0, 0.0, 1.0, 1.0],
+                [1.5, 2.5, 1.0, 0.0]])
+n = 4
+M = np.logical_and.reduce(np.mod(X, 1) == 0, axis=-1)
+M &= (X.sum(axis=-1) == n)
+X[M]
+
 
 # %% 100. Compute bootstrapped 95% confidence intervals for the mean of a 1D array X (i.e., resample the elements of an array with replacement N times, compute the mean of each sample, and then compute percentiles over the means). (★★★)
+
+X = np.random.randn(100)  # random 1D array
+N = 1000  # number of bootstrap samples
+idx = np.random.randint(0, X.size, (N, X.size))
+means = X[idx].mean(axis=1)
+confint = np.percentile(means, [2.5, 97.5])
+confint
